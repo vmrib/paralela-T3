@@ -14,6 +14,11 @@ void popularMatriz(double *matriz, int linhas, int colunas)
     }
 }
 
+void multiplicarMatriz(const double *A,  const double *B, double *C, int nla, int m, int ncb)
+{
+    
+}
+
 int main(int argc, char *argv[])
 {
     // Verifica se foram passados os argumentos obrigatórios
@@ -40,6 +45,7 @@ int main(int argc, char *argv[])
         printf("Modo sequencial ativado.\n");
 
     int nproc, processId;
+    double A[nla * m], B[m * ncb], C[nla * ncb];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -48,10 +54,11 @@ int main(int argc, char *argv[])
     // Se for nodo 0
     if (processId == 0)
     {
-        double A[nla * m], B[m * ncb], C[nla * ncb];
         popularMatriz(A, nla, m);
         popularMatriz(B, m, ncb);
     }
+
+    multiplicarMatrizes(A, B, C, nla, m, ncb);
 
     return 0;
 }
