@@ -14,9 +14,23 @@ void popularMatriz(double *matriz, int linhas, int colunas)
     }
 }
 
-void multiplicarMatriz(const double *A,  const double *B, double *C, int nla, int m, int ncb)
+void multiplicarMatriz(const double *A, const double *B, double *C, int nla, int m, int ncb)
 {
-    
+}
+
+void mult_sequencial(double *A, double *B, double *C, int nla, int m, int ncb)
+{
+    for (int i = 0; i < nla; i++)
+    {
+        for (int j = 0; j < ncb; j++)
+        {
+            C[i * nla + j] = 0;
+            for (int k = 0; k < m; k++)
+            {
+                C[i * nla + j] += A[i * nla + k] * B[k * m + j];
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[])
@@ -51,11 +65,15 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
 
+    double A[nla * m], B[m * ncb], C[nla * ncb];
+
     // Se for nodo 0
     if (processId == 0)
     {
         popularMatriz(A, nla, m);
         popularMatriz(B, m, ncb);
+        if (sequencial)
+            mult_sequencial(A, B, C, nla, m, ncb);
     }
 
     multiplicarMatrizes(A, B, C, nla, m, ncb);
