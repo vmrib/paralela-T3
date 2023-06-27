@@ -1,3 +1,4 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,20 @@ int main(int argc, char *argv[])
     // Verifica se a opção "-v" foi fornecida
     if (sequencial)
         printf("Modo sequencial ativado.\n");
+
+    int nproc, processId;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+
+    // Se for nodo 0
+    if (processId == 0)
+    {
+        double A[nla * m], B[m * ncb], C[nla * ncb];
+        popularMatriz(A, nla, m);
+        popularMatriz(B, m, ncb);
+    }
 
     return 0;
 }
