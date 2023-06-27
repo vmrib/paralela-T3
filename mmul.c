@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "chrono.c"
+
 void popular_matriz(double *matriz, int linhas, int colunas)
 {
     for (int i = 0; i < linhas; i++)
@@ -84,20 +86,55 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
 
-    double A[nla * m], B[m * ncb], C[nla * ncb];
+    double *A = (double *)malloc(nla * m * sizeof(double));
+    double *B = (double *)malloc(m * ncb * sizeof(double));
+    double *C = (double *)malloc(nla * ncb * sizeof(double));
+    double *C2 = (double *)malloc(nla * ncb * sizeof(double));
 
     // Se for nodo 0
     if (processId == 0)
     {
         popular_matriz(A, nla, m);
         popular_matriz(B, m, ncb);
-        if (sequencial)
-            mult_sequencial(A, B, C, nla, m, ncb);
     }
+
+
+    chronometer_t mult_chrono;
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (processId == 0)
+	{
+		chrono_reset(&mult_chrono);
+		chrono_start(&mult_chrono);
+	}
 
     mult_paralela(A, B, C, nla, m, ncb);
 
-    // Colocar prints, tempos, etc aqui
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (processId == 0)
+    {
+        chrono_stop(&mult_chrono);
+        chrono_reportTime(&mult_chrono, "mult_chrono");
 
+        double total_time_in_seconds = (double)chrono_gettotal(&mult_chrono) /
+									   ((double)1000 * 1000 * 1000);
+
+        printf("Tempo total: %lf s\n", total_time_in_seconds);
+
+        if (sequencial)
+        {
+            mult_sequencial(A, B, C2, nla, m, ncb);
+
+            if (comparar_matrizes(C, C2, nla, ncb) == 0)
+                printf("Resultado paralelo OK!\n");
+            else
+                printf("ERRO: Resultado paralelo != resultado sequencial!\n");
+        }
+    }
+
+    free(A);
+    free(B);
+    free(C);
+    free(C2);
+    MPI_Finalize();
     return 0;
 }
