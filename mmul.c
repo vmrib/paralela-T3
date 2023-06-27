@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void popularMatriz(double *matriz, int linhas, int colunas)
+void popular_matriz(double *matriz, int linhas, int colunas)
 {
     for (int i = 0; i < linhas; i++)
     {
@@ -14,8 +14,32 @@ void popularMatriz(double *matriz, int linhas, int colunas)
     }
 }
 
-void multiplicarMatriz(const double *A, const double *B, double *C, int nla, int m, int ncb)
+void mult_paralela(double *A, double *B, double *C, int nla, int m, int ncb)
 {
+    int nproc, processId;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+
+    // Nodo 0 faz scatter das matrizes A e braodcast da matriz B
+    MPI_Scatter(A, nla * m / nproc, MPI_DOUBLE, A, nla * m / nproc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(B, m * ncb, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    // Cada nodo calcula sua parte da matriz C
+    for (int i = 0; i < nla / nproc; i++)
+    {
+        for (int j = 0; j < ncb; j++)
+        {
+            C[i * nla + j] = 0;
+            for (int k = 0; k < m; k++)
+            {
+                C[i * nla + j] += A[i * nla + k] * B[k * m + j];
+            }
+        }
+    }
+
+    // Nodo 0 faz gather das partes da matriz C
+    MPI_Gather(C, nla * m / nproc, MPI_DOUBLE, C, nla * m / nproc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
 void mult_sequencial(double *A, double *B, double *C, int nla, int m, int ncb)
@@ -54,12 +78,7 @@ int main(int argc, char *argv[])
         sequencial = 1;
     }
 
-    // Verifica se a opção "-v" foi fornecida
-    if (sequencial)
-        printf("Modo sequencial ativado.\n");
-
     int nproc, processId;
-    double A[nla * m], B[m * ncb], C[nla * ncb];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -70,13 +89,15 @@ int main(int argc, char *argv[])
     // Se for nodo 0
     if (processId == 0)
     {
-        popularMatriz(A, nla, m);
-        popularMatriz(B, m, ncb);
+        popular_matriz(A, nla, m);
+        popular_matriz(B, m, ncb);
         if (sequencial)
             mult_sequencial(A, B, C, nla, m, ncb);
     }
 
-    multiplicarMatrizes(A, B, C, nla, m, ncb);
+    mult_paralela(A, B, C, nla, m, ncb);
+
+    // Colocar prints, tempos, etc aqui
 
     return 0;
 }
