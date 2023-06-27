@@ -11,7 +11,7 @@ void popular_matriz(double *matriz, int linhas, int colunas)
     {
         for (int j = 0; j < colunas; j++)
         {
-            matriz[i * linhas + j] = i + j;
+            matriz[i * colunas + j] = i + j;
         }
     }
 }
@@ -24,7 +24,7 @@ void mult_paralela(double *A, double *B, double *C, int nla, int m, int ncb)
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
 
     // Nodo 0 faz scatter das matrizes A e braodcast da matriz B
-    MPI_Scatter(A, nla * m / nproc, MPI_DOUBLE, A, nla * m / nproc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(A, (nla / nproc) * m , MPI_DOUBLE, A, (nla / nproc) * m, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(B, m * ncb, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     // Cada nodo calcula sua parte da matriz C
@@ -32,16 +32,16 @@ void mult_paralela(double *A, double *B, double *C, int nla, int m, int ncb)
     {
         for (int j = 0; j < ncb; j++)
         {
-            C[i * nla + j] = 0;
+            C[i * ncb + j] = 0;
             for (int k = 0; k < m; k++)
             {
-                C[i * nla + j] += A[i * nla + k] * B[k * m + j];
+                C[i * ncb + j] += A[i * m + k] * B[k * ncb + j];
             }
         }
     }
 
     // Nodo 0 faz gather das partes da matriz C
-    MPI_Gather(C, nla * m / nproc, MPI_DOUBLE, C, nla * m / nproc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Gather(C, (nla / nproc) * ncb, MPI_DOUBLE, C, (nla / nproc) * ncb, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
 void mult_sequencial(double *A, double *B, double *C, int nla, int m, int ncb)
@@ -50,10 +50,10 @@ void mult_sequencial(double *A, double *B, double *C, int nla, int m, int ncb)
     {
         for (int j = 0; j < ncb; j++)
         {
-            C[i * nla + j] = 0;
+            C[i * ncb + j] = 0;
             for (int k = 0; k < m; k++)
             {
-                C[i * nla + j] += A[i * nla + k] * B[k * m + j];
+                C[i * ncb + j] += A[i * m + k] * B[k * ncb + j];
             }
         }
     }
