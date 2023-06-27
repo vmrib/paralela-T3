@@ -59,6 +59,21 @@ void mult_sequencial(double *A, double *B, double *C, int nla, int m, int ncb)
     }
 }
 
+int comparar_matrizes(const double *matriz1, const double *matriz2, int linhas, int colunas)
+{
+    for (int i = 0; i < linhas; i++)
+    {
+        for (int j = 0; j < colunas; j++)
+        {
+            if (matriz1[i * colunas + j] != matriz2[i * colunas + j])
+            {
+                return 0; // diferentes
+            }
+        }
+    }
+    return 1; // iguais
+}
+
 int main(int argc, char *argv[])
 {
     // Verifica se foram passados os argumentos obrigatórios
@@ -98,14 +113,13 @@ int main(int argc, char *argv[])
         popular_matriz(B, m, ncb);
     }
 
-
     chronometer_t mult_chrono;
     MPI_Barrier(MPI_COMM_WORLD);
     if (processId == 0)
-	{
-		chrono_reset(&mult_chrono);
-		chrono_start(&mult_chrono);
-	}
+    {
+        chrono_reset(&mult_chrono);
+        chrono_start(&mult_chrono);
+    }
 
     mult_paralela(A, B, C, nla, m, ncb);
 
@@ -116,7 +130,7 @@ int main(int argc, char *argv[])
         chrono_reportTime(&mult_chrono, "mult_chrono");
 
         double total_time_in_seconds = (double)chrono_gettotal(&mult_chrono) /
-									   ((double)1000 * 1000 * 1000);
+                                       ((double)1000 * 1000 * 1000);
 
         printf("Tempo total: %lf s\n", total_time_in_seconds);
 
