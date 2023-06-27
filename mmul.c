@@ -3,12 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-void popularMatriz(int *matriz, int linhas, int colunas)
+void popularMatriz(double *matriz, int linhas, int colunas)
 {
-    int i, j;
-    for (i = 0; i < linhas; i++)
+    for (int i = 0; i < linhas; i++)
     {
-        for (j = 0; j < colunas; j++)
+        for (int j = 0; j < colunas; j++)
         {
             matriz[i * linhas + j] = i + j;
         }
