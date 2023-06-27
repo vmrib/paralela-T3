@@ -1,3 +1,8 @@
+## Especificacao
+
+Implementar o algoritmo de multiplicacao de matrizes utilizando MPI.
+Deve-se utilizar MPI_Bcast e MPI_Scatter.
+
 ## Execucao
 
 ./mmul Nla M Mcb
@@ -8,4 +13,4 @@
 
 ### Opcoes adicionais
 
--v: Roda algoritmo sequencial
+-v: Compara resultado com algoritmo sequencial.
