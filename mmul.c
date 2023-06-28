@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 
         printf("Tempo total: %lf s\n", total_time_in_seconds);
         
-        double GFLOPS = (((double)nla * ncb * m) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
+        double GFLOPS = (((double)nla * ncb * m * 2) / ((double)total_time_in_seconds * 1000 * 1000 * 1000));
 		printf("Vazao: %lf GFLOPS\n", GFLOPS);
     }
 
